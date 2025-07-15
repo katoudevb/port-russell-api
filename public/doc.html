@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Documentation API - Port de Plaisance</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2rem; line-height: 1.6; }
+    h1, h2, h3 { color: #004080; }
+    pre { background: #f4f4f4; padding: 1rem; border-radius: 5px; overflow-x: auto; }
+    code { font-family: monospace; background: #eee; padding: 0 4px; }
+    nav a { margin-right: 1rem; color: #0077cc; text-decoration: none; }
+    nav a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <h1>Documentation API - Port de Plaisance</h1>
+
+  <nav>
+    <a href="#vue-densemble">Vue d’ensemble</a>
+    <a href="#tutoriel">Tutoriel</a>
+    <a href="#exemples">Exemples</a>
+    <a href="#glossaire">Glossaire</a>
+  </nav>
+
+  <section id="vue-densemble">
+    <h2>1. Vue d’ensemble</h2>
+    <p>L’API REST du Port de Plaisance permet de gérer les <strong>catways</strong> (emplacements pour bateaux), les <strong>réservations</strong> associées, ainsi que les <strong>utilisateurs</strong>. Elle suit une architecture RESTful avec des routes sécurisées via JWT.</p>
+
+    <h3>Ressources principales :</h3>
+    <ul>
+      <li><strong>Catways</strong> : gestion des emplacements (création, modification, suppression, consultation).</li>
+      <li><strong>Réservations</strong> : sous-ressource de catways, gestion des réservations liées.</li>
+      <li><strong>Utilisateurs</strong> : gestion des comptes utilisateurs, authentification.</li>
+    </ul>
+
+    <h3>Authentification :</h3>
+    <p>Toutes les requêtes nécessitent un token JWT dans l’en-tête <code>Authorization: Bearer &lt;token&gt;</code> obtenu via la route <code>/users/login</code>.</p>
+  </section>
+
+  <section id="tutoriel">
+    <h2>2. Tutoriel</h2>
+
+    <h3>Étape 1 : S’inscrire</h3>
+    <pre><code>POST /users/register
+Content-Type: application/json
+
+{
+  "name": "Jean Dupont",
+  "email": "jean@example.com",
+  "password": "motdepasse"
+}</code></pre>
+
+    <h3>Étape 2 : Se connecter pour obtenir un token</h3>
+    <pre><code>POST /users/login
+Content-Type: application/json
+
+{
+  "email": "jean@example.com",
+  "password": "motdepasse"
+}</code></pre>
+
+    <p>Réponse :</p>
+    <pre><code>{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}</code></pre>
+
+    <h3>Étape 3 : Utiliser le token pour accéder aux ressources</h3>
+    <pre><code>GET /catways
+Authorization: Bearer &lt;token&gt;</code></pre>
+  </section>
+
+  <section id="exemples">
+    <h2>3. Exemples d’utilisation</h2>
+
+    <h3>Obtenir la liste des catways</h3>
+    <pre><code>GET /catways
+Authorization: Bearer &lt;token&gt;</code></pre>
+    <p>Réponse :</p>
+    <pre><code>[
+  {
+    "_id": "64a4f3c6e1a3b2d7c9b12345",
+    "catwayNumber": "C101",
+    "type": "short",
+    "catwayState": "disponible"
+  },
+  ...
+]</code></pre>
+
+    <h3>Créer une réservation sur un catway</h3>
+    <pre><code>POST /catways/64a4f3c6e1a3b2d7c9b12345/reservations
+Authorization: Bearer &lt;token&gt;
+Content-Type: application/json
+
+{
+  "clientName": "Paul Martin",
+  "boatName": "Le Vent",
+  "checkIn": "2025-08-01",
+  "checkOut": "2025-08-10"
+}</code></pre>
+    <p>Réponse :</p>
+    <pre><code>{
+  "_id": "64a5d9e4f1a7c4e8a0b56789",
+  "clientName": "Paul Martin",
+  "boatName": "Le Vent",
+  "checkIn": "2025-08-01T00:00:00.000Z",
+  "checkOut": "2025-08-10T00:00:00.000Z"
+}</code></pre>
+
+    <h3>Modifier l’état d’un catway</h3>
+    <pre><code>PATCH /catways/64a4f3c6e1a3b2d7c9b12345
+Authorization: Bearer &lt;token&gt;
+Content-Type: application/json
+
+{
+  "catwayState": "occupé"
+}</code></pre>
+  </section>
+
+  <section id="glossaire">
+    <h2>4. Glossaire</h2>
+    <ul>
+      <li><strong>Catway</strong> : emplacement de port pour un bateau, identifié par un numéro unique (<code>catwayNumber</code>).</li>
+      <li><strong>Réservation</strong> : période pendant laquelle un client réserve un catway, avec un bateau associé.</li>
+      <li><strong>JWT (JSON Web Token)</strong> : token d’authentification sécurisé, nécessaire pour accéder aux routes protégées.</li>
+      <li><strong>checkIn/checkOut</strong> : dates de début et fin de réservation au format ISO 8601.</li>
+      <li><strong>Utilisateur</strong> : personne ayant accès à l’application, pouvant effectuer des actions selon ses droits.</li>
+    </ul>
+  </section>
+
+  <p><a href="/dashboard.html">Retour au tableau de bord</a></p>
+  
+</body>
+</html>

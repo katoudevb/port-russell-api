@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Liste des catways</title>
+</head>
+<body>
+  <h1>Liste des catways</h1>
+  <!-- Conteneur UL pour lister dynamiquement les catways -->
+  <ul id="catwayList"></ul>
+
+  <script>
+    /**
+     * Retourne les headers nécessaires pour une requête sécurisée avec token JWT.
+     * Le token est récupéré depuis le localStorage.
+     * @returns {Object} Headers HTTP incluant Authorization Bearer.
+     */
+    function getAuthHeaders() {
+      const token = localStorage.getItem('token');
+      return {
+        'Authorization': 'Bearer ' + token
+      };
+    }
+
+    /**
+     * Récupération de la liste des catways via une requête GET sécurisée.
+     * On traite la réponse JSON et on injecte dynamiquement les éléments dans la liste HTML.
+     */
+    fetch('/catways', {
+      method: 'GET',
+      headers: getAuthHeaders() // Injection du header d’authentification
+    })
+    .then(res => {
+      if (!res.ok) 
+        // Gestion simple des erreurs HTTP
+        throw new Error('Erreur lors de la récupération des catways');
+      return res.json(); // Conversion du corps de la réponse en JSON
+    })
+    .then(data => {
+      const ul = document.getElementById('catwayList');
+      // Parcours du tableau des catways retourné par l’API
+      data.forEach(catway => {
+        const li = document.createElement('li');
+        // Construction d’une chaîne descriptive pour chaque catway
+        li.textContent = `Numéro: ${catway.catwayNumber}, Type: ${catway.type}, État: ${catway.catwayState}`;
+        ul.appendChild(li); // Ajout à la liste HTML
+      });
+    })
+    .catch(err => {
+      // Log de l’erreur en console pour le débogage
+      console.error(err);
+      // Message d’erreur visible à l’utilisateur
+      document.getElementById('catwayList').textContent = 'Erreur de chargement';
+    });
+  </script>
+  
+  <!-- Lien de navigation vers le tableau de bord principal -->
+  <a href="/dashboard.html">Retour au tableau de bord</a>
+</body>
+</html>

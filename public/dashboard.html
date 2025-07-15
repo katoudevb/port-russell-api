@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tableau de bord - Port de Plaisance</title>
+</head>
+<body>
+  <h1>Tableau de bord</h1>
+
+  <!-- SECTION : Création d’un utilisateur -->
+  <section>
+    <h2>Créer un utilisateur</h2>
+    <form action="/users/register" method="post">
+      <input type="text" name="name" placeholder="Nom" required />
+      <input type="email" name="email" placeholder="Email" required />
+      <input type="password" name="password" placeholder="Mot de passe" required />
+      <button type="submit">Créer</button>
+    </form>
+  </section>
+
+  <!-- SECTION : Modification d’un utilisateur -->
+  <section>
+    <h2>Modifier un utilisateur</h2>
+    <form action="/users/[ID_UTILISATEUR]" method="post" onsubmit="event.preventDefault(); patchUser();">
+      <!-- ID de l’utilisateur à modifier -->
+      <input type="text" id="userId" placeholder="ID utilisateur" required />
+      <!-- Champs optionnels pour modification -->
+      <input type="text" id="userName" placeholder="Nouveau nom" />
+      <input type="email" id="userEmail" placeholder="Nouvel email" />
+      <input type="password" id="userPassword" placeholder="Nouveau mot de passe" />
+      <button type="submit">Modifier</button>
+    </form>
+  </section>
+
+  <!-- SECTION : Suppression d’un utilisateur -->
+  <section>
+    <h2>Supprimer un utilisateur</h2>
+    <form action="/users/[ID_UTILISATEUR]" method="post" onsubmit="event.preventDefault(); deleteUser();">
+      <input type="text" id="deleteUserId" placeholder="ID utilisateur" required />
+      <button type="submit">Supprimer</button>
+    </form>
+  </section>
+
+  <!-- SECTION : Création d’un catway -->
+  <section>
+    <h2>Créer un catway</h2>
+    <form action="/catways" method="post">
+      <input type="text" name="catwayNumber" placeholder="Numéro" required />
+      <select name="type" required>
+        <option value="short">Court</option>
+        <option value="long">Long</option>
+      </select>
+      <input type="text" name="catwayState" placeholder="État" />
+      <button type="submit">Créer</button>
+    </form>
+  </section>
+
+  <!-- SECTION : Modification de l’état d’un catway -->
+  <section>
+    <h2>Modifier l’état d’un catway</h2>
+    <form action="/catways/[ID_CATWAY]" method="post" onsubmit="event.preventDefault(); patchCatway();">
+      <input type="text" id="catwayId" placeholder="ID catway" required />
+      <input type="text" id="catwayState" placeholder="Nouvel état" required />
+      <button type="submit">Modifier</button>
+    </form>
+  </section>
+
+  <!-- SECTION : Suppression d’un catway -->
+  <section>
+    <h2>Supprimer un catway</h2>
+    <form action="/catways/[ID_CATWAY]" method="post" onsubmit="event.preventDefault(); deleteCatway();">
+      <input type="text" id="deleteCatwayId" placeholder="ID catway" required />
+      <button type="submit">Supprimer</button>
+    </form>
+  </section>
+
+  <!-- SECTION : Affichage des détails d’un catway -->
+  <section>
+    <h2>Afficher les détails d’un catway</h2>
+    <form action="/catways/[ID_CATWAY]" method="get" onsubmit="event.preventDefault(); getCatwayDetails();">
+      <input type="text" id="detailCatwayId" placeholder="ID catway" required />
+      <button type="submit">Afficher</button>
+    </form>
+    <div id="catwayDetails"></div> <!-- Zone d’affichage JSON formaté -->
+  </section>
+
+  <!-- SECTION : Enregistrement d’une réservation -->
+  <section>
+    <h2>Enregistrer une réservation</h2>
+    <form action="/catways/[ID_CATWAY]/reservations" method="post" onsubmit="event.preventDefault(); createReservation();">
+      <input type="text" id="resCatwayId" placeholder="ID catway" required />
+      <input type="text" name="clientName" placeholder="Nom du client" required />
+      <input type="text" name="boatName" placeholder="Nom du bateau" required />
+      <input type="date" name="checkIn" required />
+      <input type="date" name="checkOut" required />
+      <button type="submit">Réserver</button>
+    </form>
+  </section>
+
+  <!-- SECTION : Suppression d’une réservation -->
+  <section>
+    <h2>Supprimer une réservation</h2>
+    <form action="/catways/[ID_CATWAY]/reservations/[ID_RESERVATION]" method="post" onsubmit="event.preventDefault(); deleteReservation();">
+      <input type="text" id="delResCatwayId" placeholder="ID catway" required />
+      <input type="text" id="delReservationId" placeholder="ID réservation" required />
+      <button type="submit">Supprimer</button>
+    </form>
+  </section>
+
+  <!-- SECTION : Affichage des détails d’une réservation -->
+  <section>
+    <h2>Afficher les détails d’une réservation</h2>
+    <form action="/catways/[ID_CATWAY]/reservations/[ID_RESERVATION]" method="get" onsubmit="event.preventDefault(); getReservationDetails();">
+      <input type="text" id="detailResCatwayId" placeholder="ID catway" required />
+      <input type="text" id="detailReservationId" placeholder="ID réservation" required />
+      <button type="submit">Afficher</button>
+    </form>
+    <div id="reservationDetails"></div> <!-- Zone d’affichage JSON formaté -->
+  </section>
+
+  <!-- Navigation vers d’autres pages -->
+  <nav>
+    <a href="/catways.html">Liste des catways</a> | 
+    <a href="/reservations.html">Liste des réservations</a>
+  </nav>
+
+  <script>
+    /**
+     * Récupère les headers d'authentification pour les requêtes fetch,
+     * avec le token JWT stocké en localStorage.
+     * @returns {Object} Headers HTTP avec Authorization et Content-Type.
+     */
+    function getAuthHeaders() {
+      const token = localStorage.getItem('token');
+      return {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json'
+      };
+    }
+
+    /**
+     * Modifie un utilisateur via requête PUT.
+     * Récupère les valeurs remplies et envoie un objet JSON partiel.
+     */
+    async function patchUser() {
+      const id = document.getElementById('userId').value;
+      const body = {};
+      if(document.getElementById('userName').value) body.name = document.getElementById('userName').value;
+      if(document.getElementById('userEmail').value) body.email = document.getElementById('userEmail').value;
+      if(document.getElementById('userPassword').value) body.password = document.getElementById('userPassword').value;
+
+      const res = await fetch(`/users/${id}`, {
+        method: 'PUT',              // Remplacement complet ou partiel (à adapter côté API)
+        headers: getAuthHeaders(),
+        body: JSON.stringify(body)
+      });
+      alert(await res.text());
+    }
+
+    /**
+     * Supprime un utilisateur identifié par ID via requête DELETE.
+     */
+    async function deleteUser() {
+      const id = document.getElementById('deleteUserId').value;
+      const res = await fetch(`/users/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      });
+      alert(await res.text());
+    }
+
+    /**
+     * Modifie l'état d'un catway via requête PATCH.
+     * Envoie un objet JSON partiel { catwayState }.
+     */
+    async function patchCatway() {
+      const id = document.getElementById('catwayId').value;
+      const state = document.getElementById('catwayState').value;
+      const res = await fetch(`/catways/${id}`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ catwayState: state })
+      });
+      alert(await res.text());
+    }
+
+    /**
+     * Supprime un catway identifié par ID via requête DELETE.
+     */
+    async function deleteCatway() {
+      const id = document.getElementById('deleteCatwayId').value;
+      const res = await fetch(`/catways/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      });
+      alert(await res.text());
+    }
+
+    /**
+     * Récupère les détails d’un catway via requête GET.
+     * Affiche la réponse JSON formatée dans la div dédiée.
+     */
+    async function getCatwayDetails() {
+      const id = document.getElementById('detailCatwayId').value;
+      const res = await fetch(`/catways/${id}`, {
+        method: 'GET',
+        headers: getAuthHeaders()
+      });
+      const data = await res.json();
+      document.getElementById('catwayDetails').textContent = JSON.stringify(data, null, 2);
+    }
+
+    /**
+     * Crée une réservation sur un catway donné via requête POST.
+     * Récupère les données du formulaire, construit le JSON et l’envoie.
+     */
+    async function createReservation() {
+      const form = document.querySelector('form[action^="/catways"][action$="/reservations"]');
+      const catwayId = document.getElementById('resCatwayId').value;
+
+      // Construction de l'objet réservation à partir des inputs
+      const formData = new FormData(form);
+      const reservation = {};
+      formData.forEach((value, key) => {
+        if (key !== 'catwayId') reservation[key] = value;
+      });
+
+      const res = await fetch(`/catways/${catwayId}/reservations`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(reservation)
+      });
+      alert(await res.text());
+    }
+
+    /**
+     * Supprime une réservation identifiée par catwayId et reservationId via DELETE.
+     */
+    async function deleteReservation() {
+      const catwayId = document.getElementById('delResCatwayId').value;
+      const reservationId = document.getElementById('delReservationId').value;
+      const res = await fetch(`/catways/${catwayId}/reservations/${reservationId}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      });
+      alert(await res.text());
+    }
+
+    /**
+     * Récupère les détails d’une réservation via GET.
+     * Affiche le JSON formaté dans la div dédiée.
+     */
+    async function getReservationDetails() {
+      const catwayId = document.getElementById('detailResCatwayId').value;
+      const reservationId = document.getElementById('detailReservationId').value;
+      const res = await fetch(`/catways/${catwayId}/reservations/${reservationId}`, {
+        method: 'GET',
+        headers: getAuthHeaders()
+      });
+      const data = await res.json();
+      document.getElementById('reservationDetails').textContent = JSON.stringify(data, null, 2);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Liste des réservations</title>
+</head>
+<body>
+  <h1>Liste des réservations</h1>
+  <ul id="reservationList"></ul>
+
+  <script>
+    /**
+     * Récupère les headers d'authentification avec le token JWT stocké en localStorage.
+     * @returns {Object} Headers HTTP avec Authorization et Content-Type
+     */
+    function getAuthHeaders() {
+      const token = localStorage.getItem('token');
+      return {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json'
+      };
+    }
+
+    // Récupérer la liste des catways sécurisée par le token JWT
+    fetch('/catways', {
+      headers: getAuthHeaders()
+    })
+      .then(res => res.json())
+      .then(catways => {
+        const ul = document.getElementById('reservationList');
+
+        // Pour chaque catway, récupérer les réservations associées
+        catways.forEach(catway => {
+          fetch(`/catways/${catway._id}/reservations`, {
+            headers: getAuthHeaders()
+          })
+            .then(res => res.json())
+            .then(reservations => {
+              reservations.forEach(reservation => {
+                // Création d'un élément <li> affichant les détails de la réservation
+                const li = document.createElement('li');
+                li.textContent = 
+                  `Catway: ${catway.catwayNumber}, Client: ${reservation.clientName}, Bateau: ${reservation.boatName}, ` +
+                  `du ${new Date(reservation.checkIn).toLocaleDateString()} au ${new Date(reservation.checkOut).toLocaleDateString()}`;
+                ul.appendChild(li);
+              });
+            });
+        });
+      });
+  </script>
+
+  <a href="/dashboard.html">Retour au tableau de bord</a>
+</body>
+</html>

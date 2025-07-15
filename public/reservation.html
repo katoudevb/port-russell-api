@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Détails de la réservation</title>
+</head>
+<body>
+  <h1>Détails de la réservation</h1>
+
+  <form id="reservationForm">
+    <label for="catwayId">ID du catway :</label>
+    <input type="text" id="catwayId" required />
+    <br />
+    <label for="reservationId">ID de la réservation :</label>
+    <input type="text" id="reservationId" required />
+    <br />
+    <button type="submit">Afficher</button>
+  </form>
+
+  <pre id="reservationDetails"></pre>
+
+  <a href="/dashboard.html">Retour au tableau de bord</a>
+
+  <script>
+    /**
+     * Récupère les headers d'authentification avec le token JWT depuis localStorage.
+     * @returns {Object} Headers HTTP avec Authorization et Content-Type
+     */
+    function getAuthHeaders() {
+      const token = localStorage.getItem('token');
+      return {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json'
+      };
+    }
+
+    // Gestionnaire d'événement à la soumission du formulaire
+    document.getElementById('reservationForm').addEventListener('submit', async (e) => {
+      e.preventDefault(); // Empêche le rechargement de la page
+
+      // Récupération et nettoyage des valeurs des champs
+      const catwayId = document.getElementById('catwayId').value.trim();
+      const reservationId = document.getElementById('reservationId').value.trim();
+
+      if (!catwayId || !reservationId) {
+        alert('Veuillez saisir les deux IDs.');
+        return;
+      }
+
+      try {
+        // Requête GET sécurisée pour récupérer la réservation par catwayId et reservationId
+        const res = await fetch(`/catways/${catwayId}/reservations/${reservationId}`, {
+          method: 'GET',
+          headers: getAuthHeaders()
+        });
+
+        if (!res.ok) throw new Error('Réservation non trouvée');
+
+        const reservation = await res.json();
+
+        // Affichage formaté des détails JSON dans la balise <pre>
+        document.getElementById('reservationDetails').textContent =
+          JSON.stringify(reservation, null, 2);
+      } catch (err) {
+        // Affichage d'une erreur claire en cas de problème
+        document.getElementById('reservationDetails').textContent = 'Erreur : ' + err.message;
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Détails du catway</title>
+</head>
+<body>
+  <h1>Détails du catway</h1>
+
+  <!-- Formulaire pour saisir l'ID du catway et afficher ses détails -->
+  <form id="catwayForm">
+    <label for="catwayId">ID du catway :</label>
+    <input type="text" id="catwayId" required />
+    <button type="submit">Afficher</button>
+  </form>
+
+  <!-- Zone d'affichage des détails JSON du catway -->
+  <pre id="catwayDetails"></pre>
+
+  <!-- Lien de navigation vers le tableau de bord -->
+  <a href="/dashboard.html">Retour au tableau de bord</a>
+
+  <script>
+    /**
+     * Récupère le token JWT stocké localement pour sécuriser la requête.
+     * @returns {Object} Headers HTTP avec Authorization Bearer.
+     */
+    function getAuthHeaders() {
+      const token = localStorage.getItem('token');
+      return {
+        'Authorization': 'Bearer ' + token
+      };
+    }
+
+    // Ajout d'un listener sur la soumission du formulaire
+    document.getElementById('catwayForm').addEventListener('submit', async (e) => {
+      e.preventDefault(); // Empêche le rechargement de la page
+
+      const id = document.getElementById('catwayId').value.trim();
+      if (!id) return alert('Veuillez saisir un ID de catway.');
+
+      try {
+        // Requête GET sécurisée pour récupérer le détail du catway par son ID
+        const res = await fetch(`/catways/${id}`, {
+          method: 'GET',
+          headers: getAuthHeaders()
+        });
+
+        if (!res.ok) 
+          // Gestion de l'erreur si catway non trouvé ou autre erreur serveur
+          throw new Error('Catway non trouvé');
+
+        const catway = await res.json(); // Conversion de la réponse en JSON
+        // Affichage formaté des détails du catway dans la balise <pre>
+        document.getElementById('catwayDetails').textContent = JSON.stringify(catway, null, 2);
+
+      } catch (err) {
+        // Affichage de l'erreur côté utilisateur dans la zone dédiée
+        document.getElementById('catwayDetails').textContent = 'Erreur : ' + err.message;
+      }
+    });
+  </script>
+</body>
+</html>
