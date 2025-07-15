@@ -1,4 +1,4 @@
-const Catway = require('../models/Catway');
+const Catway = require('../models/catway');
 
 /**
  * Ajoute un nouveau catway en base de données.
