@@ -8,8 +8,8 @@
   },
   "scripts": {
     "test": "mocha --exit",
-    "start": "npm test && node app.js",
-    "dev": "nodemon app.js"
+    "start": "npm test && node server.js",
+    "dev": "nodemon server.js"
   },
   "keywords": [],
   "author": "",

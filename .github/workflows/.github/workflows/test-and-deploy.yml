@@ -1,0 +1,32 @@
+name: Test & Deploy to Render
+
+on:
+  push:
+    branches:
+      - main  # ou la branche de ton devoir
+
+jobs:
+  test-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v3
+
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Installer les dépendances
+        run: npm install
+
+      - name: Lancer les tests
+        run: npm test
+
+      - name: Déployer sur Render si tests OK
+        run: |
+          curl -X POST https://api.render.com/deploy/srv-d1r0ojbipnbc73et320g \
+          -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+          -H "Content-Type: application/json" \
+          -d '{}'
